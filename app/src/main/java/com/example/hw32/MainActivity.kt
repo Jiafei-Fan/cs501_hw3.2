@@ -34,10 +34,10 @@ class MainActivity : ComponentActivity() {
             Hw32Theme {
                 val context = LocalContext.current
 
-                // 解析 XML
+                // Parse the XML file to retrieve flashcards data
                 var flashcards by remember { mutableStateOf(parseFlashcardsXml(context)) }
 
-                // 每 15 秒随机打乱卡片顺序
+                // Launch a coroutine to shuffle the flashcards every 15 seconds
                 LaunchedEffect(Unit) {
                     while (true) {
                         delay(15_000)
@@ -45,16 +45,16 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // 将背景色改为红色
+                // Set the background color of the Surface to red
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color.Red // 修改此处即可
+                    color = Color.Red
                 ) {
-                    // 用 Column 将 LazyRow 居中
+                    // Center the LazyRow in the screen using a Column
                     Column(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,   // 垂直居中
-                        horizontalAlignment = Alignment.CenterHorizontally // 水平居中
+                        verticalArrangement = Arrangement.Center,   // Vertically center the content
+                        horizontalAlignment = Alignment.CenterHorizontally // Horizontally center the content
                     ) {
                         FlashcardRow(flashcards)
                     }
@@ -64,35 +64,42 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// 数据类
+// Data class representing a flashcard with a question and an answer
 data class Flashcard(val question: String, val answer: String)
 
-// 解析 flashcards.xml
+// Function to parse the flashcards XML file (res/xml/flashcards.xml) and return a list of Flashcard objects
 fun parseFlashcardsXml(context: Context): List<Flashcard> {
     val flashcards = mutableListOf<Flashcard>()
     try {
+        // Obtain an XmlResourceParser instance for the flashcards XML file
         val parser = context.resources.getXml(R.xml.flashcards)
         var eventType = parser.eventType
         var question: String? = null
         var answer: String? = null
 
+        // Iterate over the XML document until the end is reached
         while (eventType != XmlPullParser.END_DOCUMENT) {
             when (eventType) {
                 XmlPullParser.START_TAG -> {
+                    // Process start tags
                     when (parser.name) {
                         "card" -> {
+                            // Reset question and answer for each new flashcard element
                             question = null
                             answer = null
                         }
                         "question" -> {
+                            // Retrieve text content for the question
                             question = parser.nextText()
                         }
                         "answer" -> {
+                            // Retrieve text content for the answer
                             answer = parser.nextText()
                         }
                     }
                 }
                 XmlPullParser.END_TAG -> {
+                    // When reaching the end of a flashcard element, add it to the list if both fields are present
                     if (parser.name == "card") {
                         if (!question.isNullOrEmpty() && !answer.isNullOrEmpty()) {
                             flashcards.add(Flashcard(question, answer))
@@ -100,6 +107,7 @@ fun parseFlashcardsXml(context: Context): List<Flashcard> {
                     }
                 }
             }
+            // Move to the next XML event
             eventType = parser.next()
         }
     } catch (e: Exception) {
@@ -110,11 +118,12 @@ fun parseFlashcardsXml(context: Context): List<Flashcard> {
 
 @Composable
 fun FlashcardItem(flashcard: Flashcard) {
-    // 控制翻转状态：0f 表示正面，180f 表示背面
+    // Animatable value to control the card's Y-axis rotation for the flip effect
     val rotationY = remember { Animatable(0f) }
+    // State to track if the card is flipped or not
     var isFlipped by remember { mutableStateOf(false) }
 
-    // 当 isFlipped 改变时，执行翻转动画
+    // Launch a flip animation whenever the isFlipped state changes
     LaunchedEffect(isFlipped) {
         val targetRotation = if (isFlipped) 180f else 0f
         rotationY.animateTo(
@@ -123,13 +132,15 @@ fun FlashcardItem(flashcard: Flashcard) {
         )
     }
 
-    // 点击卡片时，切换 isFlipped
+    // Function to toggle the flip state of the card
     fun flipCard() {
         isFlipped = !isFlipped
     }
 
+    // Determine whether the front side of the card is visible based on the current rotation
     val isFrontVisible = rotationY.value < 90f
 
+    // Define the card UI with fixed width and height and padding
     Card(
         modifier = Modifier
             .width(250.dp)
@@ -137,15 +148,18 @@ fun FlashcardItem(flashcard: Flashcard) {
             .padding(8.dp)
             .clickable { flipCard() }
             .graphicsLayer {
-                // 若想启用 3D 翻转，可打开下面这行：
-//                rotationY = rotationY.value
+                // Uncomment the following line to enable the 3D flip effect by applying rotationY
+                // rotationY = rotationY.value
+                // Adjust the camera distance to give a realistic 3D effect
                 cameraDistance = 8 * density
             }
     ) {
+        // Box to stack the text on top of each other and center the content
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
+            // Display the question on the front side, and the answer on the back side
             if (isFrontVisible) {
                 Text(text = flashcard.question)
             } else {
@@ -157,11 +171,12 @@ fun FlashcardItem(flashcard: Flashcard) {
 
 @Composable
 fun FlashcardRow(flashcards: List<Flashcard>) {
-    // 这是一个可以横向滑动的列表
+    // Create a horizontally scrolling list (LazyRow) for displaying flashcards
     LazyRow(
-        horizontalArrangement = Arrangement.Center, // 横向内容居中
-        verticalAlignment = Alignment.CenterVertically // 纵向内容居中
+        horizontalArrangement = Arrangement.Center, // Center the content horizontally
+        verticalAlignment = Alignment.CenterVertically // Center the content vertically
     ) {
+        // Display each flashcard using the FlashcardItem composable
         items(flashcards) { card ->
             FlashcardItem(card)
         }
