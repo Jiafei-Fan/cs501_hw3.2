@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<flashcards xmlns:android="http://schemas.android.com/apk/res/android">
+    <card>
+        <question>What is the capital of France?</question>
+        <answer>Paris</answer>
+    </card>
+    <card>
+        <question>Who wrote 'Romeo and Juliet'?</question>
+        <answer>William Shakespeare</answer>
+    </card>
+    <card>
+        <question>What is the chemical symbol for gold?</question>
+        <answer>Au</answer>
+    </card>
+    <card>
+        <question>How many planets are in our solar system?</question>
+        <answer>8</answer>
+    </card>
+    <card>
+        <question>What is the largest mammal on Earth?</question>
+        <answer>Blue Whale</answer>
+    </card>
+</flashcards>
